@@ -1,30 +1,40 @@
 "use strict";
 
-const { Bot, Keyboard, InlineKeyboard } = require("grammy");
+import { Bot, Keyboard, InlineKeyboard } from "grammy";
 
-const { BOT_API_KEY } = require("./config.js");
-const { handleErrors } = require("./errorHandler.js");
+import { BOT_API_KEY } from "./config.js";
+import { handleErrors } from "./errorHandler.js";
+
+import { pool as db } from "./db.js";
 
 const bot = new Bot(BOT_API_KEY);
 
-const topics = [
-  "Українська мова",
-  "Математика",
-  "Історія України",
-  "Англійська мова",
-];
+const getTopics = async () => {
+  try {
+    const result = [];
+    const req = await db.query("SELECT * FROM topics");
+    for (const item of req.rows) {
+      result.push(item.topic);
+    }
+    return result;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+const topics = await getTopics();
 
 bot.command("start", async (ctx) => {
-  const menuButtons = [];
+  try {
+    const menuButtons = topics.map(topic => [topic]);
 
-  for (const topic of topics) {
-    menuButtons.push([topic]);
+    const keyboard = Keyboard.from(menuButtons).resized();
+    await ctx.reply("Обери предмет", {
+      reply_markup: keyboard,
+    });
+  } catch (e) {
+    console.error(e);
   }
-
-  const keyboard = Keyboard.from(menuButtons).resized();
-  await ctx.reply("Обери предмет", {
-    reply_markup: keyboard,
-  });
 });
 
 bot.hears(topics[2], async (ctx) => {
