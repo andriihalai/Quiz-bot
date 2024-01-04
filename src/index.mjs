@@ -9,12 +9,12 @@ import { pool as db } from "./db.js";
 
 const bot = new Bot(BOT_API_KEY);
 
-const getTopics = async () => {
+const getSubjects = async () => {
   try {
     const result = [];
-    const req = await db.query("SELECT * FROM topics");
+    const req = await db.query("SELECT * FROM subjects");
     for (const item of req.rows) {
-      result.push(item.topic);
+      result.push(item.subject);
     }
     return result;
   } catch (e) {
@@ -22,11 +22,11 @@ const getTopics = async () => {
   }
 }
 
-const topics = await getTopics();
+const subjects = await getSubjects();
 
 bot.command("start", async (ctx) => {
   try {
-    const menuButtons = topics.map(topic => [topic]);
+    const menuButtons = subjects.map(subject => [subject]);
 
     const keyboard = Keyboard.from(menuButtons).resized();
     await ctx.reply("Обери предмет", {
@@ -37,17 +37,14 @@ bot.command("start", async (ctx) => {
   }
 });
 
-bot.hears(topics[2], async (ctx) => {
+bot.hears(subjects, async (ctx) => {
+  const subject = ctx.message.text;
+  const { id: subjectId } = (await db.query("SELECT id FROM subjects WHERE subject = $1", [subject])).rows[0];
+  const testTypes = (await db.query("SELECT test_type, description FROM test_types WHERE subject_id = $1", [subjectId])).rows;
   const rows = [];
 
-  const map = new Map([
-    ["Дати", "dates"],
-    ["Терміни", "definitions"],
-    ["Персоналії", "personalities"],
-  ]);
-
-  for (const entry of map) {
-    const buttonRow = InlineKeyboard.text(entry[0], entry[1]);
+  for (const item of testTypes) {
+    const buttonRow = InlineKeyboard.text(item.test_type, item.description);
     rows.push([buttonRow]);
   }
 
