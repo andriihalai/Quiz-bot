@@ -24,6 +24,17 @@ const getSubjects = async () => {
   }
 };
 
+const getTestTypes = async (subjectId) => {
+  const testTypes = (
+    await db.query(
+      "SELECT test_type, description FROM test_types WHERE subject_id = $1",
+      [subjectId]
+    )
+  ).rows;
+
+  return testTypes;
+};
+
 const showMenu = async (ctx) => {
   try {
     const menuButtons = subjects.map((subject) => [subject]);
@@ -49,12 +60,7 @@ bot.hears(subjects, async (ctx) => {
     const { id: subjectId } = (
       await db.query("SELECT id FROM subjects WHERE subject = $1", [subject])
     ).rows[0];
-    const testTypes = (
-      await db.query(
-        "SELECT test_type, description FROM test_types WHERE subject_id = $1",
-        [subjectId]
-      )
-    ).rows;
+    const testTypes = await getTestTypes(subjectId)
     const rows = [];
 
     for (const item of testTypes) {
