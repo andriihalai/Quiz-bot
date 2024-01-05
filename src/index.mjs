@@ -38,21 +38,25 @@ bot.command("start", async (ctx) => {
 });
 
 bot.hears(subjects, async (ctx) => {
-  const subject = ctx.message.text;
-  const { id: subjectId } = (await db.query("SELECT id FROM subjects WHERE subject = $1", [subject])).rows[0];
-  const testTypes = (await db.query("SELECT test_type, description FROM test_types WHERE subject_id = $1", [subjectId])).rows;
-  const rows = [];
-
-  for (const item of testTypes) {
-    const buttonRow = InlineKeyboard.text(item.test_type, item.description);
-    rows.push([buttonRow]);
+  try {
+    const subject = ctx.message.text;
+    const { id: subjectId } = (await db.query("SELECT id FROM subjects WHERE subject = $1", [subject])).rows[0];
+    const testTypes = (await db.query("SELECT test_type, description FROM test_types WHERE subject_id = $1", [subjectId])).rows;
+    const rows = [];
+  
+    for (const item of testTypes) {
+      const buttonRow = InlineKeyboard.text(item.test_type, item.description);
+      rows.push([buttonRow]);
+    }
+  
+    const keyboard = InlineKeyboard.from(rows);
+  
+    await ctx.reply("Що саме ви хочете попрактикувати?", {
+      reply_markup: keyboard,
+    });
+  } catch (e) {
+    console.error(e);
   }
-
-  const keyboard = InlineKeyboard.from(rows);
-
-  await ctx.reply("Що саме ви хочете попрактикувати?", {
-    reply_markup: keyboard,
-  });
 });
 
 bot.hears("callback_query:data", async (ctx) => {});

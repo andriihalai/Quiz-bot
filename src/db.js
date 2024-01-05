@@ -8,7 +8,7 @@ const {
   DB_NAME,
 } = require("./config.js");
 
-const { Pool, Client } = require("pg");
+const { Pool } = require("pg");
 
 const pool = new Pool({
   user: DB_USER,
@@ -18,6 +18,4 @@ const pool = new Pool({
   database: DB_NAME,
 });
 
-const client = new Client();
-
-module.exports = { pool, client};
+module.exports = { pool };
